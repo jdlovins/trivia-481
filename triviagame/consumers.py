@@ -1,6 +1,6 @@
 import json
 from channels.sessions import channel_session
-
+from pprint import pprint
 
 @channel_session
 def ws_connect(message):
@@ -10,5 +10,5 @@ def ws_connect(message):
 
 @channel_session
 def ws_receive(message):
-    print("recieved " + message.content)
+    pprint(vars(message))
     message.reply_channel.send("Got your message!")
