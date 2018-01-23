@@ -1,2 +1,2 @@
-web: daphne -b 0.0.0.0 -p 5000 triviagame.asgi:channel_layer
-worker: python manage.py runworker
+web: daphne -b 0.0.0.0 -p $PORTda triviagame.asgi:channel_layer -v2
+worker: python manage.py runworker -v2
