@@ -10,4 +10,4 @@ def ws_connect(message):
 
 @channel_session
 def ws_receive(message):
-    print("recieved " + message)
+    print("recieved " + str(message))
