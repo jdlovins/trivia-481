@@ -27,6 +27,7 @@ SECRET_KEY = 'aw6vlt9c!f!8jms+ii1#ez*k@5w-*fx0ze^3h(jgl9c!j=wpsl'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', True)
+print("Debug: " + DEBUG)
 
 ALLOWED_HOSTS = ['trivia-481.herokuapp.com']
 
