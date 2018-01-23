@@ -10,4 +10,5 @@ def ws_connect(message):
 
 @channel_session
 def ws_receive(message):
-    print("recieved " + str(message))
+    print("recieved " + message.content)
+    message.reply_channel.send("Got your message!")
