@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -71,6 +72,16 @@ TEMPLATES = [
         },
     },
 ]
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+        },
+        "ROUTING": "triviagame.routing.channel_routing",
+    },
+}
 
 WSGI_APPLICATION = 'triviagame.wsgi.application'
 
