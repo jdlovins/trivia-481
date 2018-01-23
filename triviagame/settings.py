@@ -26,9 +26,9 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 SECRET_KEY = 'aw6vlt9c!f!8jms+ii1#ez*k@5w-*fx0ze^3h(jgl9c!j=wpsl'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['trivia-481.herokuapp.com']
 
 
 # Application definition
