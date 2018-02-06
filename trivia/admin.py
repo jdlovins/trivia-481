@@ -3,5 +3,14 @@ from trivia.models import Question, Answer
 
 # Register your models here.
 
-admin.site.register(Question)
-admin.site.register(Answer)
+
+class AnswerInline(admin.StackedInline):
+    model = Answer
+
+
+class QuestionAdmin(admin.ModelAdmin):
+    inlines = [
+        AnswerInline,
+    ]
+
+admin.site.register(Question, QuestionAdmin)
