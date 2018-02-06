@@ -27,9 +27,9 @@ SECRET_KEY = 'aw6vlt9c!f!8jms+ii1#ez*k@5w-*fx0ze^3h(jgl9c!j=wpsl'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', True)
-print("Debug: " + DEBUG)
+print("Debug: " + str(DEBUG))
 
-ALLOWED_HOSTS = ['trivia-481.herokuapp.com']
+ALLOWED_HOSTS = ['trivia-481.herokuapp.com', '127.0.0.1']
 
 
 # Application definition
@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
-    'channels'
+    'channels',
+    'trivia'
 ]
 
 MIDDLEWARE = [
@@ -61,7 +62,7 @@ ROOT_URLCONF = 'triviagame.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -132,10 +133,9 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
-
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
 STATIC_URL = '/static/'
 
 TEMPLATE_DIRS = (os.path.join(BASE_DIR,  'templates'),)
