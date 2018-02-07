@@ -1,9 +1,7 @@
-from channels import route
-
-from triviagame import consumers
+from channels import route, include
 
 channel_routing = [
-   # Wire up websocket channels to our consumers:
-   route("websocket.connect", consumers.ws_connect),
-   route("websocket.receive", consumers.ws_receive),
+    include("trivia.routing.websocket_routing"),
+
+    include("trivia.routing.custom_routing"),
 ]
