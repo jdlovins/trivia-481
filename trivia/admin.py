@@ -1,5 +1,5 @@
 from django.contrib import admin
-from trivia.models import Question, Answer
+from trivia.models import Question, Answer, GameUser, Room
 
 # Register your models here.
 
@@ -13,4 +13,7 @@ class QuestionAdmin(admin.ModelAdmin):
         AnswerInline,
     ]
 
+
 admin.site.register(Question, QuestionAdmin)
+admin.site.register(GameUser)
+admin.site.register(Room)

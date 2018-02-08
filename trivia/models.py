@@ -1,6 +1,10 @@
 from django.db import models
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+
 from .choices import CategoryType
 from channels import Group
+from random import randint
 import json
 
 # Create your models here.
@@ -21,16 +25,33 @@ class Question(models.Model):
         return self.content
 
 
+class GameUser(models.Model):
+
+    Name = models.CharField(max_length=25)
+    Reply_Channel = models.CharField(max_length=50)
+    Creator = models.BooleanField()
+
+    def __str__(self):
+        return self.Name
+
+
 class Room(models.Model):
     """
     A room for people to chat in.
     """
 
     # Room title
-    title = models.CharField(max_length=255)
+    Title = models.CharField(max_length=255)
+    Users = models.ManyToManyField(GameUser, blank=True)
+    Code = models.IntegerField()
+
+    @classmethod
+    def create(cls):
+        room = cls(Code=randint(1,9999))
+        return room
 
     def __str__(self):
-        return self.title
+        return self.Title
 
     @property
     def websocket_group(self):
@@ -51,3 +72,9 @@ class Room(models.Model):
         #     {"text": json.dumps(final_msg)}
         # )
         pass
+
+
+@receiver(pre_delete, sender=Room)
+def pre_delete_room(sender, instance, **kwargs):
+    for user in instance.Users.all():
+        user.delete()

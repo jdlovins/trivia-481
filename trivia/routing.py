@@ -1,12 +1,12 @@
 from channels import route
-from .consumers import ws_connect, ws_receive, create_room
+from .consumers import ws_connect, ws_disconnect, ws_receive, create_room
 
 # There's no path matching on these routes; we just rely on the matching
 # from the top-level routing. We _could_ path match here if we wanted.
 websocket_routing = [
     # Called when WebSockets connect
     route("websocket.connect", ws_connect),
-
+    route("websocket.disconnect", ws_disconnect),
     # Called when WebSockets get sent a data frame
     route("websocket.receive", ws_receive),
 
