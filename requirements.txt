@@ -9,10 +9,15 @@ constantly==15.1.0
 daphne==1.4.2
 dj-database-url==0.4.2
 Django==2.0.1
+django-bootstrap3==9.1.0
+django-choices==1.6.0
+django-widget-tweaks==1.4.1
+gunicorn==19.6.0
 hyperlink==17.3.1
 incremental==17.5.0
 msgpack-python==0.5.1
 psycopg2==2.7.3.2
+pypiwin32==220
 python-dotenv==0.7.1
 pytz==2017.3
 redis==2.10.6
