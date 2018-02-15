@@ -54,6 +54,7 @@ def create_room(message):
     r.save()
     r.Title = message['Event']['RoomName']
     r.Users.add(user)
+    r.websocket_group.add(user.Reply_Channel)
     r.save()
 
 
