@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from .models import Question, Answer, Room
 import json
 import datetime
+
+
 # Create your views here.
 
 
@@ -16,15 +18,22 @@ def index(request):
 
 
 def broadcast(request):
-
     rooms = Room.objects.all()
+
+    '''
+     self.websocket_group.send(
+        #     {"text": json.dumps(final_msg)}
+        # )
+        '''
 
     for r in rooms:
         r.websocket_group.send(
-            json.dumps({
-                "type": "BROADCAST",
-                "content": "Broadcast sent! (" + str(datetime.datetime.now().time()) + ")"
-            })
+            {
+                "text": json.dumps({
+                    "type": "BROADCAST",
+                    "content": "Broadcast sent! (" + str(datetime.datetime.now().time()) + ")"
+                })
+            }
         )
 
     return render(request, 'broadcast.html')
