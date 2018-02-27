@@ -24,6 +24,8 @@ class Question(models.Model):
     def __str__(self):
         return self.content
 
+    
+
 
 class GameUser(models.Model):
 

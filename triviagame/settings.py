@@ -29,7 +29,7 @@ SECRET_KEY = 'aw6vlt9c!f!8jms+ii1#ez*k@5w-*fx0ze^3h(jgl9c!j=wpsl'
 DEBUG = os.environ.get('DEBUG', True)
 print("Debug: " + str(DEBUG))
 
-ALLOWED_HOSTS = ['trivia-481.herokuapp.com', '127.0.0.1']
+ALLOWED_HOSTS = ['trivia-481.herokuapp.com', '127.0.0.1', '*']
 
 
 # Application definition

@@ -28,6 +28,9 @@ def ws_disconnect(message):
 
 @channel_session
 def ws_receive(message):
+
+    print("We got a message!")
+
     # Load the message['text'] array as our new payload
     payload = json.loads(message['text'])
     # Steal the payload type from the text, easier to move it than deal with it java side
@@ -57,10 +60,28 @@ def create_room(message):
     r.websocket_group.add(user.Reply_Channel)
     r.save()
 
-
-
 @channel_session
 def join_room(message):
+    print("We got a join room request!")
+
+    code = message['Event']['Code']
+
+    room = Room.objects.filter(Code=code).first()
+
+    if room is not None:
+        user = GameUser()
+        user.Name = message['Event']['Username']
+        user.Reply_Channel = message['reply_channel']
+        user.Creator = False
+        user.save()
+
+        room.Users.add(user)
+        room.websocket_group.add(user.Reply_Channel)
+        room.save()
+
+
+
+
     pass
 
     #r = Room()
