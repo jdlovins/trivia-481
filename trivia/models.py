@@ -24,8 +24,6 @@ class Question(models.Model):
     def __str__(self):
         return self.content
 
-    
-
 
 class GameUser(models.Model):
 
@@ -46,6 +44,7 @@ class Room(models.Model):
     Title = models.CharField(max_length=255)
     Users = models.ManyToManyField(GameUser, blank=True)
     Code = models.IntegerField()
+    Capacity = models.IntegerField()
 
     @classmethod
     def create(cls):

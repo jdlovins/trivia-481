@@ -4,12 +4,15 @@ from channels import Channel
 from channels.sessions import channel_session
 from channels.auth import  channel_session_user
 from pprint import pprint
+from .decorators import json_to_dict
 from .models import Room, GameUser
+
 
 @channel_session
 def ws_connect(message):
     print("Client connecting")
     message.reply_channel.send({"accept": True})
+
 
 @channel_session
 def ws_disconnect(message):
@@ -23,7 +26,6 @@ def ws_disconnect(message):
             room.delete()
         else:
             user.delete()
-
 
 
 @channel_session
@@ -60,6 +62,7 @@ def create_room(message):
     r.websocket_group.add(user.Reply_Channel)
     r.save()
 
+
 @channel_session
 def join_room(message):
     print("We got a join room request!")
@@ -78,6 +81,10 @@ def join_room(message):
         room.Users.add(user)
         room.websocket_group.add(user.Reply_Channel)
         room.save()
+
+        # check for room space
+        # check if the game is running already
+        # send back response codes
 
 
 
