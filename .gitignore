@@ -101,5 +101,4 @@ ENV/
 .mypy_cache/
 
 .idea
-trivia/migrations/*
 db.sqlite3
