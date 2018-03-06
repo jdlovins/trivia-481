@@ -18,6 +18,6 @@ custom_routing = [
     # Handling different chat commands (websocket.receive is decoded and put
     # onto this channel) - routed on the "command" attribute of the decoded
     # message.
-    route("trivia.receive", create_room, Type="^CREATE_GAME$"),
-    route("trivia.receive", join_room, Type="^JOIN_GAME$")
+    route("trivia.receive", create_room, type="^CREATE_GAME$"),
+    route("trivia.receive", join_room, type="^JOIN_GAME$")
 ]

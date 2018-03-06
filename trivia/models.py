@@ -27,12 +27,12 @@ class Question(models.Model):
 
 class GameUser(models.Model):
 
-    Name = models.CharField(max_length=25)
-    Reply_Channel = models.CharField(max_length=50)
-    Creator = models.BooleanField()
+    name = models.CharField(max_length=25)
+    reply_channel = models.CharField(max_length=50)
+    creator = models.BooleanField()
 
     def __str__(self):
-        return self.Name
+        return self.name
 
 
 class Room(models.Model):
@@ -41,18 +41,22 @@ class Room(models.Model):
     """
 
     # Room title
-    Title = models.CharField(max_length=255)
-    Users = models.ManyToManyField(GameUser, blank=True)
-    Code = models.IntegerField()
-    Capacity = models.IntegerField()
+    title = models.CharField(max_length=255)
+    users = models.ManyToManyField(GameUser, blank=True)
+    capacity = models.IntegerField()
+    rounds = models.IntegerField()
+    time = models.IntegerField()
+    started = models.BooleanField()
+    code = models.IntegerField()
+
 
     @classmethod
     def create(cls):
-        room = cls(Code=randint(1,9999))
+        room = cls(code=randint(1, 9999))  # could be really unlucky and get a dupe code but oh well
         return room
 
     def __str__(self):
-        return self.Title
+        return f"{self.title} - Code: {self.code} - Users: {len(self.users.all())}/{self.capacity}"
 
     @property
     def websocket_group(self):
@@ -73,9 +77,3 @@ class Room(models.Model):
         #     {"text": json.dumps(final_msg)}
         # )
         pass
-
-
-@receiver(pre_delete, sender=Room)
-def pre_delete_room(sender, instance, **kwargs):
-    for user in instance.Users.all():
-        user.delete()

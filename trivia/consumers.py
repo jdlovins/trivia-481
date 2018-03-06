@@ -2,10 +2,8 @@ import json
 
 from channels import Channel
 from channels.sessions import channel_session
-from channels.auth import  channel_session_user
-from pprint import pprint
-from .decorators import json_to_dict
 from .models import Room, GameUser
+from .events import CreateGameEvent, JoinGameEvent, JoinGameResponseEvent
 
 
 @channel_session
@@ -17,15 +15,17 @@ def ws_connect(message):
 @channel_session
 def ws_disconnect(message):
     # Get the user from the reply_channel
-    user = GameUser.objects.filter(Reply_Channel=message['reply_channel']).first()
+    user = GameUser.objects.filter(reply_channel=message['reply_channel']).first()
     if user is not None:
         # find the room the user is in
         room = user.room_set.first()
         # If the room only has this user left in it, delete otherwise delete the user
-        if len(room.Users.all()) == 1:
-            room.delete()
-        else:
-            user.delete()
+        if room is not None:
+            if len(room.users.all()) == 1:
+                room.delete()
+            else:
+                user.delete()
+                # send a user left event
 
 
 @channel_session
@@ -36,9 +36,9 @@ def ws_receive(message):
     # Load the message['text'] array as our new payload
     payload = json.loads(message['text'])
     # Steal the payload type from the text, easier to move it than deal with it java side
-    payload['Type'] = payload['Event']['Type']
+    payload['type'] = payload['event']['type']
     # Remove it from the original location because it doesnt need to be there
-    payload['Event'].pop('Type', None)
+    payload['event'].pop('Type', None)
     # Retain reply_channel
     payload['reply_channel'] = message.content['reply_channel']
     # Shoot off to channels
@@ -47,50 +47,80 @@ def ws_receive(message):
 
 @channel_session
 def create_room(message):
+    print("Received create room packet")
 
-    print("Recieved create room packet")
+    event = CreateGameEvent.from_message(message)
+
+    for room in Room.objects.all():
+        if room.title == event.room_name:
+            Channel(message['reply_channel'])\
+                .send(JoinGameResponseEvent(False, "This room name is already taken!").to_json)
+            return
+
+    for user in GameUser.objects.all():
+        if user.name == event.username:
+            Channel(message['reply_channel']) \
+                .send(JoinGameResponseEvent(False, "This username is already taken!").to_json)
+            return
+
     user = GameUser()
-    user.Name = message['Event']['Username']
-    user.Reply_Channel = message['reply_channel']
-    user.Creator = True
+    user.name = event.username
+    user.reply_channel = message['reply_channel']
+    user.creator = True
     user.save()
 
     r = Room.create()
+    r.title = event.room_name
+    r.capacity = event.players
+    r.rounds = event.rounds
+    r.time = event.time
+    r.started = False
+    r.save()  # we need to save to make the weird many to many table jazz
+    r.users.add(user)
+    r.websocket_group.add(user.reply_channel)
     r.save()
-    r.Title = message['Event']['RoomName']
-    r.Users.add(user)
-    r.websocket_group.add(user.Reply_Channel)
-    r.save()
+
+    Channel(message['reply_channel']).send(JoinGameResponseEvent(True).to_json)
 
 
 @channel_session
 def join_room(message):
     print("We got a join room request!")
 
-    code = message['Event']['Code']
-
-    room = Room.objects.filter(Code=code).first()
+    event = JoinGameEvent.from_message(message)
+    code = event.code
+    room = Room.objects.filter(code=code).first()
 
     if room is not None:
+
+        if room.started:
+            Channel(message['reply_channel']) \
+                .send(JoinGameResponseEvent(False, "The game has already started!").to_json)
+            return
+
+        for user in room.Users.all():
+            if user.Name == event.username:
+                Channel(message['reply_channel'])\
+                    .send(JoinGameResponseEvent(False, "This username is already taken!").to_json)
+                return
+
+        if len(room.Users.all()) >= room.capacity:
+            Channel(message['reply_channel']).send(JoinGameResponseEvent(False, "This room is already full!").to_json)
+            return
+
         user = GameUser()
-        user.Name = message['Event']['Username']
-        user.Reply_Channel = message['reply_channel']
-        user.Creator = False
+        user.name = event.username
+        user.reply_channel = message['reply_channel']
+        user.creator = False
         user.save()
 
         room.Users.add(user)
-        room.websocket_group.add(user.Reply_Channel)
+        room.websocket_group.add(user.reply_channel)
         room.save()
 
-        # check for room space
-        # check if the game is running already
-        # send back response codes
+        resp = JoinGameResponseEvent(True)
+        Channel(message['reply_channel']).send(resp.to_json)
 
-
-
-
-    pass
-
-    #r = Room()
-    #r.title = message['RoomName']
-    #r.websocket_group.add(message.reply_channel)
+    else:
+        resp = JoinGameResponseEvent(False, "Room does not exist!")
+        Channel(message['reply_channel']).send(resp.to_json)
