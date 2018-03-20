@@ -1,5 +1,5 @@
 from channels import route
-from .consumers import ws_connect, ws_disconnect, ws_receive, create_room, join_room
+from .consumers import ws_connect, ws_disconnect, ws_receive, create_room, join_room, game_info_request
 
 # There's no path matching on these routes; we just rely on the matching
 # from the top-level routing. We _could_ path match here if we wanted.
@@ -19,5 +19,6 @@ custom_routing = [
     # onto this channel) - routed on the "command" attribute of the decoded
     # message.
     route("trivia.receive", create_room, type="^CREATE_GAME$"),
-    route("trivia.receive", join_room, type="^JOIN_GAME$")
+    route("trivia.receive", join_room, type="^JOIN_GAME$"),
+    route("trivia.receive", game_info_request, type="^GAME_INFO_REQUEST$")
 ]

@@ -34,6 +34,9 @@ class GameUser(models.Model):
     def __str__(self):
         return self.name
 
+    def to_dict(self):
+        return {"name": self.name, "creator": self.creator}
+
 
 class Room(models.Model):
     """
@@ -70,10 +73,12 @@ class Room(models.Model):
         """
         Called to send a message to the room on behalf of a user.
         """
-        #final_msg = {'room': str(self.id), 'message': message, 'username': user.username, 'msg_type': msg_type}
+        self.websocket_group.send(message)
 
-        # Send out the message to everyone in the room
-        # self.websocket_group.send(
-        #     {"text": json.dumps(final_msg)}
-        # )
-        pass
+
+def pre_delete_room(sender, instance, **kwargs):
+    for user in instance.users.all():
+        user.delete()
+
+
+pre_delete.connect(pre_delete_room, sender=Room)

@@ -3,7 +3,7 @@ import json
 from channels import Channel
 from channels.sessions import channel_session
 from .models import Room, GameUser
-from .events import CreateGameEvent, JoinGameEvent, JoinGameResponseEvent
+from .events import CreateGameEvent, JoinGameEvent, JoinGameResponseEvent, GameInfoRequest, GameInfoResponse, UserJoinEvent, UserLeftEvent
 
 
 @channel_session
@@ -25,7 +25,8 @@ def ws_disconnect(message):
                 room.delete()
             else:
                 user.delete()
-                # send a user left event
+                room.websocket_group.discard(message['reply_channel'])
+                room.send_message(UserLeftEvent(user.to_dict()).to_json)
 
 
 @channel_session
@@ -69,18 +70,18 @@ def create_room(message):
     user.creator = True
     user.save()
 
-    r = Room.create()
-    r.title = event.room_name
-    r.capacity = event.players
-    r.rounds = event.rounds
-    r.time = event.time
-    r.started = False
-    r.save()  # we need to save to make the weird many to many table jazz
-    r.users.add(user)
-    r.websocket_group.add(user.reply_channel)
-    r.save()
+    room = Room.create()
+    room.title = event.room_name
+    room.capacity = event.players
+    room.rounds = event.rounds
+    room.time = event.time
+    room.started = False
+    room.save()  # we need to save to make the weird many to many table jazz
+    room.users.add(user)
+    room.websocket_group.add(user.reply_channel)
+    room.save()
 
-    Channel(message['reply_channel']).send(JoinGameResponseEvent(True).to_json)
+    Channel(message['reply_channel']).send(JoinGameResponseEvent(True, room.code).to_json)
 
 
 @channel_session
@@ -98,13 +99,13 @@ def join_room(message):
                 .send(JoinGameResponseEvent(False, "The game has already started!").to_json)
             return
 
-        for user in room.Users.all():
-            if user.Name == event.username:
+        for user in room.users.all():
+            if user.name == event.username:
                 Channel(message['reply_channel'])\
                     .send(JoinGameResponseEvent(False, "This username is already taken!").to_json)
                 return
 
-        if len(room.Users.all()) >= room.capacity:
+        if len(room.users.all()) >= room.capacity:
             Channel(message['reply_channel']).send(JoinGameResponseEvent(False, "This room is already full!").to_json)
             return
 
@@ -114,13 +115,28 @@ def join_room(message):
         user.creator = False
         user.save()
 
-        room.Users.add(user)
+        room.send_message(UserJoinEvent(user.to_dict()).to_json)
+
+        room.users.add(user)
         room.websocket_group.add(user.reply_channel)
         room.save()
 
-        resp = JoinGameResponseEvent(True)
-        Channel(message['reply_channel']).send(resp.to_json)
+        Channel(message['reply_channel']).send(JoinGameResponseEvent(True, room.code).to_json)
 
     else:
-        resp = JoinGameResponseEvent(False, "Room does not exist!")
-        Channel(message['reply_channel']).send(resp.to_json)
+        Channel(message['reply_channel']).send(JoinGameResponseEvent(False, "Room does not exist!").to_json)
+
+
+@channel_session
+def game_info_request(message):
+
+    event = GameInfoRequest.from_message(message)
+
+    room = Room.objects.filter(code=event.code).first()
+
+    if room is not None:
+        players = [x.to_dict() for x in room.users.all()]
+        Channel(message['reply_channel']).send(GameInfoResponse(room.title, room.capacity,
+                                                                room.rounds, room.time, players).to_json)
+    else:
+        Channel(message['reply_channel']).send(GameInfoResponse(False).to_json)

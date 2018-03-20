@@ -79,7 +79,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "asgi_redis.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+            "hosts": [os.environ.get('REDIS_URL', 'redis://trivia:9c419ae9068cced3eeb5db1f62ba540a7eb7bb3cd5cc8819f7a8cd69ef4b013c@apps.resurfed.xyz:24735')],
         },
         "ROUTING": "triviagame.routing.channel_routing",
     },

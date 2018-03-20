@@ -27,10 +27,11 @@ class CreateGameEvent(BaseEvent):
 
 
 class CreateGameResponseEvent(BaseEvent):
-    def __init__(self, success, message=""):
+    def __init__(self, success, code, message=""):
         self.type = "CREATE_GAME_RESPONSE"
         self.success = success
         self.message = message
+        self.code = code
 
 
 class JoinGameEvent(BaseEvent):
@@ -45,8 +46,41 @@ class JoinGameEvent(BaseEvent):
 
 
 class JoinGameResponseEvent(BaseEvent):
-    def __init__(self, success, message=""):
+    def __init__(self, success, code=-1, message=""):
         self.type = "JOIN_GAME_RESPONSE"
         self.success = success
         self.message = message
+        self.code = code
 
+
+class GameInfoRequest(BaseEvent):
+    def __init__(self, code):
+        self.code = code
+
+    @classmethod
+    def from_message(cls, message):
+        event = message['event']
+        return cls(event['code'])
+
+
+class GameInfoResponse(BaseEvent):
+    def __init__(self, title="", max_players="", rounds="", time="", players="", success=True,):
+        self.type = "GAME_INFO_RESPONSE"
+        self.title = title
+        self.max_players = max_players
+        self.rounds = rounds
+        self.time = time
+        self.players = players
+        self.success = success
+
+
+class UserJoinEvent(BaseEvent):
+    def __init__(self, player):
+        self.type = "USER_JOIN"
+        self.player = player
+
+
+class UserLeftEvent(BaseEvent):
+    def __init__(self, player):
+        self.type = "USER_LEFT"
+        self.player = player
