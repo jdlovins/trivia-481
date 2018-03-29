@@ -123,7 +123,7 @@ def join_room(message):
 
         Channel(message['reply_channel']).send(JoinGameResponseEvent(True, room.code).to_json)
 
-        if len(room.users) == 2:
+        if len(room.users.all()) == 2:
             start_game_countdown.delay(room.id)
 
     else:
