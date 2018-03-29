@@ -4,7 +4,7 @@ from channels import Channel
 from channels.sessions import channel_session
 from .models import Room, GameUser
 from .events import CreateGameEvent, CreateGameResponseEvent, JoinGameEvent, JoinGameResponseEvent, GameInfoRequest, GameInfoResponse, UserJoinEvent, UserLeftEvent
-
+from .tasks import start_game_countdown
 
 @channel_session
 def ws_connect(message):
@@ -122,6 +122,9 @@ def join_room(message):
         room.save()
 
         Channel(message['reply_channel']).send(JoinGameResponseEvent(True, room.code).to_json)
+
+        if len(room.users) == 2:
+            start_game_countdown.delay(room.id)
 
     else:
         Channel(message['reply_channel']).send(JoinGameResponseEvent(False, message="Room does not exist!").to_json)

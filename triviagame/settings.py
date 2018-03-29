@@ -148,3 +148,11 @@ STATICFILES_DIRS = [
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Celery settings
+BROKER_URL = 'redis://trivia:9c419ae9068cced3eeb5db1f62ba540a7eb7bb3cd5cc8819f7a8cd69ef4b013c@apps.resurfed.xyz:24735'
+CELERY_RESULT_BACKEND = 'redis://trivia:9c419ae9068cced3eeb5db1f62ba540a7eb7bb3cd5cc8819f7a8cd69ef4b013c@apps.resurfed.xyz:24735'
+# use json format for everything
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from .models import Question, Answer, Room
 import json
 import datetime
-
+from .tasks import test_task
 
 # Create your views here.
 
