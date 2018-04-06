@@ -1,8 +1,9 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models.signals import pre_delete
+from django.db.models.signals import pre_delete, post_save
 from django.dispatch import receiver
 
-from .choices import CategoryType
+from .choices import CategoryType, ButtonType
 from channels import Group
 from random import randint
 import json
@@ -13,8 +14,12 @@ import json
 class Answer(models.Model):
     content = models.CharField(default='', blank=False, max_length=150)
     correct = models.BooleanField(default=False)
+    button = models.CharField(max_length=1, choices=ButtonType.choices, default=ButtonType.A)
 
     question = models.ForeignKey('Question', on_delete=models.CASCADE)
+
+    def to_dict(self):
+        return {"answer": self.content, "button": self.button, "pk": self.id}
 
 
 class Question(models.Model):
@@ -25,17 +30,24 @@ class Question(models.Model):
         return self.content
 
 
+class SubmittedAnswer(models.Model):
+    user = models.ForeignKey("GameUser", on_delete=models.CASCADE)
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+    rank = models.IntegerField()
+
+
 class GameUser(models.Model):
 
     name = models.CharField(max_length=25)
     reply_channel = models.CharField(max_length=50)
     creator = models.BooleanField()
+    points = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name
 
     def to_dict(self):
-        return {"name": self.name, "creator": self.creator}
+        return {"name": self.name, "creator": self.creator, "points": self.points}
 
 
 class Room(models.Model):
@@ -46,12 +58,14 @@ class Room(models.Model):
     # Room title
     title = models.CharField(max_length=255)
     users = models.ManyToManyField(GameUser, blank=True)
+    # meta = models.ForeignKey('RoomMeta', on_delete=models.CASCADE)
     capacity = models.IntegerField()
     rounds = models.IntegerField()
     time = models.IntegerField()
     started = models.BooleanField()
     code = models.IntegerField()
 
+    submitted_answers = models.ManyToManyField(SubmittedAnswer, blank=True)
 
     @classmethod
     def create(cls):
@@ -74,6 +88,11 @@ class Room(models.Model):
         Called to send a message to the room on behalf of a user.
         """
         self.websocket_group.send(message)
+
+
+class RoomMeta(models.Model):
+    users_answered = models.IntegerField()
+    owner_room = models.OneToOneField(Room, related_name='meta_info', on_delete=models.CASCADE, null=True)
 
 
 def pre_delete_room(sender, instance, **kwargs):

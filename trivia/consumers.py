@@ -2,9 +2,11 @@ import json
 
 from channels import Channel
 from channels.sessions import channel_session
-from .models import Room, GameUser
-from .events import CreateGameEvent, CreateGameResponseEvent, JoinGameEvent, JoinGameResponseEvent, GameInfoRequest, GameInfoResponse, UserJoinEvent, UserLeftEvent
+from .models import Room, GameUser, RoomMeta, SubmittedAnswer, Answer
+from .events import CreateGameEvent, CreateGameResponseEvent, JoinGameEvent, JoinGameResponseEvent, GameInfoRequest, GameInfoResponse, UserJoinEvent, UserLeftEvent, HandleAnswerEvent
 from .tasks import start_game_countdown
+
+answer_dict = {}
 
 @channel_session
 def ws_connect(message):
@@ -81,6 +83,11 @@ def create_room(message):
     room.websocket_group.add(user.reply_channel)
     room.save()
 
+    room_meta = RoomMeta()
+    room_meta.users_answered = 0
+    room_meta.owner_room = room
+    room_meta.save()
+
     Channel(message['reply_channel']).send(CreateGameResponseEvent(True, room.code).to_json)
 
 
@@ -123,8 +130,10 @@ def join_room(message):
 
         Channel(message['reply_channel']).send(JoinGameResponseEvent(True, room.code).to_json)
 
-        if len(room.users.all()) == 2:
-            start_game_countdown.delay(room.id)
+        if len(room.users.all()) >= 1:
+            print("fucking calling task!")
+            tsk = start_game_countdown.delay(room.id)
+            print(tsk.id)
 
     else:
         Channel(message['reply_channel']).send(JoinGameResponseEvent(False, message="Room does not exist!").to_json)
@@ -142,4 +151,37 @@ def game_info_request(message):
         Channel(message['reply_channel']).send(GameInfoResponse(room.title, room.capacity,
                                                                 room.rounds, room.time, players).to_json)
     else:
-        Channel(message['reply_channel']).send(GameInfoResponse(False).to_json)
+        Channel(message['reply_channel']).send(GameInfoResponse(success=False).to_json)
+
+
+@channel_session
+def handle_answer(message):
+
+    event = HandleAnswerEvent.from_message(message)
+
+    user = GameUser.objects.filter(reply_channel=message['reply_channel']).first()
+
+    if user is not None:
+        room = user.room_set.first()
+        if room is not None:
+
+            room.meta_info.users_answered += 1
+            room.meta_info.save()
+
+            ans = SubmittedAnswer()
+            ans.answer = Answer.objects.get(pk=event.answer_pk)
+            ans.user = user
+            ans.rank = room.meta_info.users_answered
+            ans.save()
+
+            print(f"We saved SubAnswer with id of {ans.id}")
+            room.submitted_answers.add(ans)
+            room.save()
+
+            print(f"User has locked in answer: {event.answer_pk}")
+            print(f"We have {room.meta_info.users_answered} users locked in!")
+
+
+
+def test_me():
+    print("Hello world!!")

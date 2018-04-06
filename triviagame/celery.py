@@ -3,6 +3,9 @@ import os
 from celery import Celery
 from django.conf import settings
 
+import dotenv
+
+dotenv.load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'triviagame.settings')
 

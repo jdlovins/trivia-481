@@ -9,7 +9,7 @@ class BaseEvent(object):
         t = self.__dict__
         for key in t:
             t[to_camel_case(key)] = t.pop(key)
-        return {"text": json.dumps(t, default=lambda o: o.__dict__, sort_keys=True, indent=4)}
+        return {"text": json.dumps(t, default=lambda o: o.__dict__, sort_keys=True)}
 
 
 class CreateGameEvent(BaseEvent):
@@ -64,7 +64,7 @@ class GameInfoRequest(BaseEvent):
 
 
 class GameInfoResponse(BaseEvent):
-    def __init__(self, title="", max_players="", rounds="", time="", players="", success=True,):
+    def __init__(self, title="", max_players="", rounds="", time="", players="", success=True):
         self.type = "GAME_INFO_RESPONSE"
         self.title = title
         self.max_players = max_players
@@ -84,3 +84,45 @@ class UserLeftEvent(BaseEvent):
     def __init__(self, player):
         self.type = "USER_LEFT"
         self.player = player
+
+
+class UpdateProgressEvent(BaseEvent):
+    def __init__(self, progress):
+        self.type = "UPDATE_PROGRESS"
+        self.progress = progress
+
+
+class GameCountdownEvent(BaseEvent):
+    def __init__(self):
+        self.type = "GAME_COUNTDOWN_STARTED"
+
+
+class GameStartedEvent(BaseEvent):
+    def __init__(self):
+        self.type = "GAME_STARTED"
+
+
+class QuestionInfoEvent(BaseEvent):
+    def __init__(self, question, pk, category, answers):
+        self.type = "QUESTION_INFO"
+        self.question = question
+        self.pk = pk
+        self.category = category
+        self.answers = answers
+
+
+class HandleAnswerEvent(BaseEvent):
+    def __init__(self, question_pk, answer_pk):
+        self.question_pk = question_pk
+        self.answer_pk = answer_pk
+
+    @classmethod
+    def from_message(cls, message):
+        event = message['event']
+        return cls(event['questionPK'], event['answerPK'])
+
+
+class UpdatePlayerList(BaseEvent):
+    def __init__(self, players):
+        self.type = "UPDATE_PLAYER_LIST"
+        self.players = players

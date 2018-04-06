@@ -35,6 +35,7 @@ ALLOWED_HOSTS = ['trivia-481.herokuapp.com', '127.0.0.1', '*']
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,8 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
-    'channels',
     'trivia'
+
 ]
 
 MIDDLEWARE = [
@@ -79,14 +80,13 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "asgi_redis.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [os.environ.get('REDIS_URL', 'redis://trivia:9c419ae9068cced3eeb5db1f62ba540a7eb7bb3cd5cc8819f7a8cd69ef4b013c@apps.resurfed.xyz:24735')],
+            "hosts": [os.environ.get('REDIS_URL', '')],
         },
         "ROUTING": "triviagame.routing.channel_routing",
     },
 }
 
 WSGI_APPLICATION = 'triviagame.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
@@ -120,6 +120,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+#SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+SESSION_COOKIE_DOMAIN = None
+SESSION_COOKIE_NAME = "trivia_csrf"
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
@@ -150,8 +153,8 @@ STATICFILES_DIRS = [
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Celery settings
-BROKER_URL = 'redis://trivia:9c419ae9068cced3eeb5db1f62ba540a7eb7bb3cd5cc8819f7a8cd69ef4b013c@apps.resurfed.xyz:24735'
-CELERY_RESULT_BACKEND = 'redis://trivia:9c419ae9068cced3eeb5db1f62ba540a7eb7bb3cd5cc8819f7a8cd69ef4b013c@apps.resurfed.xyz:24735'
+BROKER_URL =  os.environ.get('REDIS_URL', 'redis://trivia:9c419ae9068cced3eeb5db1f62ba540a7eb7bb3cd5cc8819f7a8cd69ef4b013c@apps.resurfed.xyz:24735/1')
+CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://trivia:9c419ae9068cced3eeb5db1f62ba540a7eb7bb3cd5cc8819f7a8cd69ef4b013c@apps.resurfed.xyz:24735/1')  #'redis://trivia:9c419ae9068cced3eeb5db1f62ba540a7eb7bb3cd5cc8819f7a8cd69ef4b013c@apps.resurfed.xyz:24735'
 # use json format for everything
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
