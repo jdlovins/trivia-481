@@ -1,6 +1,6 @@
 from triviagame.celery import app
 from trivia.models import Room, Question, Answer, SubmittedAnswer
-from trivia.events import UpdateProgressEvent, GameCountdownEvent, GameStartedEvent, QuestionInfoEvent, UpdatePlayerList
+from trivia.events import *
 import time
 import random
 
@@ -44,6 +44,8 @@ def start_game(room_id):
 
                 if len(used_questions) == question_count:
                     print("Ran out of questions... killing game")
+                    room.send_message(UpdateStatusMessageEvent("We ran out of questins!").to_json)
+                    room.send_message(UpdateProgressEvent(0).to_json)
                     return
 
                 question_id = random.randint(1, question_count)
@@ -53,15 +55,32 @@ def start_game(room_id):
                         used_questions.append(question_id)
                         break
 
+            room.send_message(UpdateProgressMaxEvent(5).to_json)
+            room.send_message(UpdateStatusMessageEvent("Waiting for next round....").to_json)
+            room.send_message(RoundOverEvent().to_json)
+
+            for x in range(5, -1, -1):
+                print(f"[ROUND_NEXT] Sending Progress {x}")
+                room.send_message(UpdateProgressEvent(x).to_json)
+                time.sleep(1)
+
             print(f"We are going to send {question.id} to {room.id}")
             # send out message
+            room.send_message(UpdateProgressMaxEvent(10).to_json)
 
+            room.send_message(UpdateStatusMessageEvent("Round in progress... Answer quickly!").to_json)
             room.send_message(QuestionInfoEvent(question.content, question.id, question.category,
                                                 [answer.to_dict() for answer in question.answer_set.all()]).to_json)
 
-            while room.meta_info.users_answered != 1: #users_count:
-                print(f"We have {room.meta_info.users_answered} locked in right now.")
-                print("Waiting for all the users to lock in before proceeding to the next round!")
+            for x in range(10, -1, -1):
+                room.send_message(UpdateProgressEvent(x).to_json)
+                print(f"[ROUND_COUNDOWN] Sending progress {x}")
+
+                if room.meta_info.users_answered == users_count or x == 0: # 1 should really be users_count
+                    room.send_message(RoundOverEvent().to_json)
+                    print("Sending round over event")
+                    break
+
                 time.sleep(1)
                 room.refresh_from_db()
 
@@ -76,10 +95,13 @@ def start_game(room_id):
                     ans.user.points += points
                     ans.user.save()
 
+            # clear out all the submitted answers
+            room.submitted_answers.all().delete()
+
             # update user ranks
-            room.send_message(UpdatePlayerList([x.to_dict() for x in room.users.all()]).to_json)
+            room.send_message(UpdatePlayerListEvent([x.to_dict() for x in room.users.all()]).to_json)
 
             rounds += 1
-            print("Incremeneted rounds")
+
 
 

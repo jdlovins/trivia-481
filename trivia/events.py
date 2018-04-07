@@ -122,7 +122,24 @@ class HandleAnswerEvent(BaseEvent):
         return cls(event['questionPK'], event['answerPK'])
 
 
-class UpdatePlayerList(BaseEvent):
+class UpdatePlayerListEvent(BaseEvent):
     def __init__(self, players):
         self.type = "UPDATE_PLAYER_LIST"
         self.players = players
+
+
+class UpdateProgressMaxEvent(BaseEvent):
+    def __init__(self, max_progress):
+        self.type = "UPDATE_PROGRESS_MAX"
+        self.max = max_progress
+
+
+class UpdateStatusMessageEvent(BaseEvent):
+    def __init__(self, message):
+        self.type = "UPDATE_STATUS_MESSAGE"
+        self.message = message
+
+
+class RoundOverEvent(BaseEvent):
+    def __init__(self):
+        self.type = "ROUND_OVER"
