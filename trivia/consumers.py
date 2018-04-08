@@ -3,9 +3,9 @@ import json
 from channels import Channel
 from channels.sessions import channel_session
 from .models import Room, GameUser, RoomMeta, SubmittedAnswer, Answer
-from .events import CreateGameEvent, CreateGameResponseEvent, JoinGameEvent, JoinGameResponseEvent, GameInfoRequest, GameInfoResponse, UserJoinEvent, UserLeftEvent, HandleAnswerEvent
+from .events import *
 from .tasks import start_game_countdown
-
+from .choices import RoomStatus
 answer_dict = {}
 
 @channel_session
@@ -77,7 +77,7 @@ def create_room(message):
     room.capacity = event.players
     room.rounds = event.rounds
     room.time = event.time
-    room.started = False
+    room.status = RoomStatus.NONE
     room.save()  # we need to save to make the weird many to many table jazz
     room.users.add(user)
     room.websocket_group.add(user.reply_channel)
@@ -101,7 +101,7 @@ def join_room(message):
 
     if room is not None:
 
-        if room.started:
+        if room.status == RoomStatus.STARTED:
             Channel(message['reply_channel']) \
                 .send(JoinGameResponseEvent(False, message="The game has already started!").to_json)
             return
@@ -130,10 +130,15 @@ def join_room(message):
 
         Channel(message['reply_channel']).send(JoinGameResponseEvent(True, room.code).to_json)
 
-        if len(room.users.all()) >= 1:
-            print("fucking calling task!")
-            tsk = start_game_countdown.delay(room.id)
-            print(tsk.id)
+        if len(room.users.all()) >= 2:
+            print("Room status is " + room.status)
+            if room.status == RoomStatus.NONE:
+                room.status = RoomStatus.PRE_GAME
+                room.save()
+                start_game_countdown.delay(room.id)
+            elif room.status == RoomStatus.PRE_GAME:
+                Channel(message['reply_channel']).send(GameCountdownEvent().to_json)
+                # this doesnt really work because the intent isnt active yet...
 
     else:
         Channel(message['reply_channel']).send(JoinGameResponseEvent(False, message="Room does not exist!").to_json)

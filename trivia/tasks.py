@@ -1,6 +1,8 @@
 from triviagame.celery import app
 from trivia.models import Room, Question, Answer, SubmittedAnswer
 from trivia.events import *
+from trivia.utils import ordinal
+from trivia.choices import RoomStatus
 import time
 import random
 
@@ -38,6 +40,9 @@ def start_game(room_id):
         users_count = len(room.users.all())
         rounds = 0
 
+        room.status = RoomStatus.STARTED
+        room.save()
+
         while rounds <= room.rounds:
 
             while True:
@@ -72,7 +77,7 @@ def start_game(room_id):
             room.send_message(QuestionInfoEvent(question.content, question.id, question.category,
                                                 [answer.to_dict() for answer in question.answer_set.all()]).to_json)
 
-            for x in range(10, -1, -1):
+            for x in range(room.time, -1, -1):
                 room.send_message(UpdateProgressEvent(x).to_json)
                 print(f"[ROUND_COUNDOWN] Sending progress {x}")
 
@@ -88,15 +93,21 @@ def start_game(room_id):
             room.meta_info.users_answered = 0
             room.meta_info.save()
 
+            correct_message = ""
+            amount_correct = 1
             for ans in room.submitted_answers.all():
                 if ans.answer.correct:
                     points = (users_count - ans.rank + 1) * 5
-                    print(f"We should award {ans.user.name} {points} points")
+                    correct_message += f"{ans.user.name} answered question {rounds + 1} " \
+                                       f"correctly {ordinal(amount_correct)} and was awarded {points} points! \n"
+                    amount_correct += 1
                     ans.user.points += points
                     ans.user.save()
 
             # clear out all the submitted answers
             room.submitted_answers.all().delete()
+
+            room.send_message(UpdateLogEvent(correct_message).to_json)
 
             # update user ranks
             room.send_message(UpdatePlayerListEvent([x.to_dict() for x in room.users.all()]).to_json)

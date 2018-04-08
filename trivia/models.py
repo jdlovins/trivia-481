@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models.signals import pre_delete, post_save
 from django.dispatch import receiver
 
-from .choices import CategoryType, ButtonType
+from .choices import CategoryType, ButtonType, RoomStatus
 from channels import Group
 from random import randint
 import json
@@ -62,7 +62,7 @@ class Room(models.Model):
     capacity = models.IntegerField()
     rounds = models.IntegerField()
     time = models.IntegerField()
-    started = models.BooleanField()
+    status = models.CharField(max_length=15, choices=RoomStatus.choices, default=RoomStatus.NONE)
     code = models.IntegerField()
 
     submitted_answers = models.ManyToManyField(SubmittedAnswer, blank=True)

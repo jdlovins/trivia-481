@@ -27,7 +27,7 @@ class CreateGameEvent(BaseEvent):
 
 
 class CreateGameResponseEvent(BaseEvent):
-    def __init__(self, success, code, message=""):
+    def __init__(self, success, code=0, message=""):
         self.type = "CREATE_GAME_RESPONSE"
         self.success = success
         self.message = message
@@ -143,3 +143,9 @@ class UpdateStatusMessageEvent(BaseEvent):
 class RoundOverEvent(BaseEvent):
     def __init__(self):
         self.type = "ROUND_OVER"
+
+
+class UpdateLogEvent(BaseEvent):
+    def __init__(self, message):
+        self.type = "UPDATE_LOG"
+        self.message = message

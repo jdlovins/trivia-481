@@ -11,3 +11,9 @@ class ButtonType(DjangoChoices):
     B = ChoiceItem()
     C = ChoiceItem()
     D = ChoiceItem()
+
+
+class RoomStatus(DjangoChoices):
+    PRE_GAME = ChoiceItem()
+    STARTED = ChoiceItem()
+    NONE = ChoiceItem()
