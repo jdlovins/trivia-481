@@ -37,6 +37,7 @@ def start_game(room_id):
     if room is not None:
         room.send_message(GameStartedEvent().to_json)
         question_count = len(Question.objects.all())
+        question_pks = [x.id for x in Question.objects.all()]
         users_count = len(room.users.all())
         rounds = 0
 
@@ -53,7 +54,8 @@ def start_game(room_id):
                     room.send_message(UpdateProgressEvent(0).to_json)
                     return
 
-                question_id = random.randint(1, question_count)
+                question_id = question_pks[random.randint(1, len(question_pks))]
+
                 if question_id not in used_questions:
                     question = Question.objects.get(pk=question_id)
                     if question is not None:
