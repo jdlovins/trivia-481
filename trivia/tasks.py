@@ -21,8 +21,8 @@ def start_game_countdown(room_id):
         time.sleep(2)
 
         for x in range(10, 0, -1):
-            room.send(UpdateStatusMessageEvent("Game starting soon...").to_json)
-            room.send(UpdateProgressMaxEvent(10).to_json)
+            room.send_message(UpdateStatusMessageEvent("Game starting soon...").to_json)
+            room.send_message(UpdateProgressMaxEvent(10).to_json)
             room.send_message(UpdateProgressEvent(x).to_json)
             time.sleep(1)
 
