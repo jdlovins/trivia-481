@@ -54,7 +54,7 @@ def start_game(room_id):
                     room.send_message(UpdateProgressEvent(0).to_json)
                     return
 
-                question_id = question_pks[random.randint(1, len(question_pks))]
+                question_id = question_pks[random.randint(0, len(question_pks) - 1)]
 
                 if question_id not in used_questions:
                     question = Question.objects.get(pk=question_id)
