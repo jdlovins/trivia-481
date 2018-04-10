@@ -20,9 +20,9 @@ def start_game_countdown(room_id):
     if room is not None:
         time.sleep(2)
 
-        room.send_message(GameCountdownEvent().to_json)
-
         for x in range(10, 0, -1):
+            room.send(UpdateStatusMessageEvent("Game starting soon...").to_json)
+            room.send(UpdateProgressMaxEvent(10).to_json)
             room.send_message(UpdateProgressEvent(x).to_json)
             time.sleep(1)
 
