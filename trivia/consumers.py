@@ -77,7 +77,7 @@ def create_room(message):
     room.capacity = event.players
     room.rounds = event.rounds
     room.time = event.time
-    room.status = RoomStatus.NONE
+    room.status = RoomStatus.PRE_GAME
     room.save()  # we need to save to make the weird many to many table jazz
     room.users.add(user)
     room.websocket_group.add(user.reply_channel)
@@ -130,7 +130,7 @@ def join_room(message):
 
         Channel(message['reply_channel']).send(JoinGameResponseEvent(True, room.code).to_json)
 
-        if len(room.users.all()) >= 2:
+        '''if len(room.users.all()) >= 2:
             print("Room status is " + room.status)
             if room.status == RoomStatus.NONE:
                 room.status = RoomStatus.PRE_GAME
@@ -139,6 +139,7 @@ def join_room(message):
             elif room.status == RoomStatus.PRE_GAME:
                 Channel(message['reply_channel']).send(GameCountdownEvent().to_json)
                 # this doesnt really work because the intent isnt active yet...
+        '''
 
     else:
         Channel(message['reply_channel']).send(JoinGameResponseEvent(False, message="Room does not exist!").to_json)
@@ -187,6 +188,12 @@ def handle_answer(message):
             print(f"We have {room.meta_info.users_answered} users locked in!")
 
 
+def handle_game_start(message):
 
-def test_me():
-    print("Hello world!!")
+    event = StartGameEvent.from_message(message)
+    room = Room.objects.get(code=event.code)
+
+    if room is not None:
+        room.status = RoomStatus.STARTED
+        room.save()
+        start_game_countdown.delay(room.id)

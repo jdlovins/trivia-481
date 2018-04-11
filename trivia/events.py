@@ -149,3 +149,13 @@ class UpdateLogEvent(BaseEvent):
     def __init__(self, message):
         self.type = "UPDATE_LOG"
         self.message = message
+
+
+class StartGameEvent(BaseEvent):
+    def __init__(self, code):
+        self.code = code
+
+    @classmethod
+    def from_message(cls, message):
+        event = message['event']
+        return cls(event['code'])

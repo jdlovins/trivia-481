@@ -18,11 +18,11 @@ def start_game_countdown(room_id):
     room = Room.objects.get(pk=room_id)
 
     if room is not None:
-        time.sleep(2)
+        time.sleep(1)
+
+        room.send_message(GameCountdownEvent().to_json)
 
         for x in range(10, 0, -1):
-            room.send_message(UpdateStatusMessageEvent("Game starting soon...").to_json)
-            room.send_message(UpdateProgressMaxEvent(10).to_json)
             room.send_message(UpdateProgressEvent(x).to_json)
             time.sleep(1)
 
@@ -39,7 +39,7 @@ def start_game(room_id):
         question_count = len(Question.objects.all())
         question_pks = [x.id for x in Question.objects.all()]
         users_count = len(room.users.all())
-        rounds = 0
+        rounds = 1
 
         room.status = RoomStatus.STARTED
         room.save()
@@ -50,7 +50,7 @@ def start_game(room_id):
 
                 if len(used_questions) == question_count:
                     print("Ran out of questions... killing game")
-                    room.send_message(UpdateStatusMessageEvent("We ran out of questins!").to_json)
+                    room.send_message(UpdateStatusMessageEvent("We ran out of questions!").to_json)
                     room.send_message(UpdateProgressEvent(0).to_json)
                     return
 
@@ -83,7 +83,7 @@ def start_game(room_id):
                 room.send_message(UpdateProgressEvent(x).to_json)
                 print(f"[ROUND_COUNDOWN] Sending progress {x}")
 
-                if room.meta_info.users_answered == users_count or x == 0: # 1 should really be users_count
+                if room.meta_info.users_answered == users_count or x == 0:
                     room.send_message(RoundOverEvent().to_json)
                     print("Sending round over event")
                     break
@@ -116,5 +116,7 @@ def start_game(room_id):
 
             rounds += 1
 
+    #  send game over stuff here!
 
-
+    room.send_message(UpdateStatusMessageEvent("Game over!").to_json)
+    room.send_message(UpdateProgressEvent(0).to_json)
